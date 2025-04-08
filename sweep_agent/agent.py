@@ -3,12 +3,18 @@ import requests
 import subprocess
 import json
 import sys
+from dto import SweepDTO
 
 def get_sweep(server_url, sweep_id):
     response = requests.get(f"{server_url}/get_sweep/{sweep_id}")
     if response.status_code == 200:
         data = response.json()
-        return data['config']
+        return SweepDTO(
+            sweep_id=data['sweep_id'],
+            program=data['program'],
+            name=data['name'],
+            config=data['config']
+        )
     elif response.status_code == 404:
         print("No sweeps left")
         return None
@@ -16,11 +22,10 @@ def get_sweep(server_url, sweep_id):
         print(f"Error: {response.json()['message']}")
         return None
 
-def run_sweep(config):
-    program = config['program']
-    # Pass the config as a JSON string via command-line argument
-    config_json = json.dumps(config)
-    subprocess.run(['python', program, '--config', config_json])
+def run_sweep(dto: SweepDTO):
+    # Pass the DTO as a JSON string via command-line argument
+    dto_json = dto.to_json()
+    subprocess.run(['python', dto.program, '--dto', dto_json])
 
 def main():
     parser = argparse.ArgumentParser(description='Sweep Agent')
@@ -28,17 +33,16 @@ def main():
     parser.add_argument('server_url', help='Server URL')
     args = parser.parse_args()
 
-    config = get_sweep(args.server_url, args.sweep_id)
-    if config:
-        run_sweep(config)
+    dto = get_sweep(args.server_url, args.sweep_id)
+    if dto:
+        run_sweep(dto)
 
-# Library function to access config (for use in main.py)
-def get_config():
+def get_sweep_config():
     parser = argparse.ArgumentParser(description='Sweep Config Parser')
-    parser.add_argument('--config', type=str, help='JSON config string')
-    args, unknown = parser.parse_known_args()  # Parse only known args, ignore others
-    if args.config:
-        return json.loads(args.config)
+    parser.add_argument('--dto', type=str, help='JSON DTO string')
+    args, unknown = parser.parse_known_args()
+    if args.dto:
+        return SweepDTO.from_json(args.dto)
     return None
 
 if __name__ == '__main__':

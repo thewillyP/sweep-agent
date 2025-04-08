@@ -3,7 +3,7 @@ import requests
 import subprocess
 import json
 import sys
-from dto import SweepDTO
+from sweep_agent.dto import SweepDTO
 
 def get_sweep(server_url, sweep_id):
     response = requests.get(f"{server_url}/get_sweep/{sweep_id}")

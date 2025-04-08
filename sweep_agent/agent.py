@@ -37,7 +37,7 @@ def main():
     if dto:
         run_sweep(dto)
 
-def get_sweep_config():
+def get_sweep_config() -> SweepDTO | None:
     parser = argparse.ArgumentParser(description='Sweep Config Parser')
     parser.add_argument('--dto', type=str, help='JSON DTO string')
     args, unknown = parser.parse_known_args()
